@@ -1,0 +1,132 @@
+<?php
+
+/**
+ * @package   metaverse_user
+ * @copyright Copyright (C) 2013 Wene - ssm2017 Binder ( S.Massiaux ). All rights reserved.
+ * @link      http://www.d4os.org
+ * @license   GNU/GPL, http://www.gnu.org/licenses/gpl-2.0.html
+ * metaverse_user is free software. This version may have been modified pursuant
+ * to the GNU General Public License, and as distributed it includes or
+ * is derivative of works licensed under the GNU General Public License or
+ * other free or open source software licenses.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function metaverse_user_menu() {
+	$items = array();
+	$items['admin/config/metaverse-framework/metaverse-user'] = array(
+		'title' => 'Metaverse user',
+		'description' => 'Settings for the metaverse user module.',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('metaverse_user_settings'),
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	return $items;
+}
+
+/**
+ * Admin settings
+ */
+function metaverse_user_settings() {
+	$form = array();
+	$form['metaverse_user_password_fieldset'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Password'),
+		'#collapsible' => FALSE,
+		'#collapsed' => FALSE,
+	);
+	$form['metaverse_user_password_fieldset']['metaverse_user_password'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Password.'),
+		'#default_value' => variable_get('metaverse_user_password', '0000'),
+		'#description' => t("Enter the password to communicate with the terminals."),
+	);
+	return system_settings_form($form);
+}
+
+/**
+ * Implements hook_node_view.
+ */
+function metaverse_user_node_view($node, $build_mode = 'full') {
+	if ($node->type == 'metaverse_user_terminal' && $build_mode == 'full') {
+		$url = $node->field_mu_terminal_url[$node->language][0]['value'];
+		// ping terminal
+		$response = metaverse_framework_http_request($url . 'ping');
+		if ($response->success && $response->code == 200) {
+			$status = 'status';
+			$message = t('Terminal is online');
+		}
+		else {
+			$status = 'error';
+			$message = t('The terminal is not answering : !error', array('!error' => $response->data . ' (' . $response->code . ')'));
+		}
+		$node->content['metaverse_user_status'] = array(
+			'#markup' => '<div class="messages ' . $status . '">' . $message . '</div>'
+		);
+	}
+}
+
+function metaverse_user_user_view($account, $view_mode, $langcode) {
+  if ($GLOBALS['user']->uid == $account->uid || $GLOBALS['user']->uid == 1) {
+		// check the uuid
+		if (!isset($account->field_mu_user_uuid[LANGUAGE_NONE][0]['value']) || empty($account->field_mu_user_uuid[LANGUAGE_NONE][0]['value']) || $account->field_mu_user_uuid[LANGUAGE_NONE][0]['value'] == UUID_ZERO) {
+			// check if there is already a validator uuid for this user
+			$code = db_query("SELECT code FROM {metaverse_user_validators} WHERE uid = :uid", array(':uid' => $account->uid))->fetchField();
+			if (!$code) {
+				// generate a uuid
+				$code = metaverse_framework_uuid_create();
+				// store this uuid
+				db_query("INSERT INTO {metaverse_user_validators} (code, uid) VALUES (:code, :uid)", array(':code' => $code, ':uid' => $account->uid));
+			}
+			$account->content['metaverse_user'] = array(
+				'#type' => 'user_profile_item',
+				'#title' => t('Inworld validation code'),
+				'#markup' => t('Use this code to validate your avatar inworld : !code', array('!code' => $code))
+			);
+		}
+  }
+}
+
+
+/**
+ * metaverse frameworkd dispatcher
+ */
+function metaverse_user_dispatch($params) {
+	$cmd = $params['cmd'];
+	$sl = &$params['sl'];
+	$args = $params['args'];
+	switch ($cmd) {
+		case 'save_terminal':
+			module_load_include('inc', 'metaverse_user', 'metaverse_user_terminals');
+			metaverse_user_inworld_save_terminal($sl, $args);
+			break;
+		case 'check_user_code':
+			metaverse_user_inworld_check_user_code($sl, $args);
+			break;
+		default:
+			$sl->response['status'] = FALSE;
+			$sl->response['message'] = "Oops! Unknown command: $cmd.";
+			break;
+	}
+}
+
+function metaverse_user_inworld_check_user_code(&$sl, $args) {
+	$uid = db_query("SELECT uid FROM {metaverse_user_validators} WHERE code = :code", array(':code' => $args['code']))->fetchField();
+	if (!$uid) {
+		$sl->response['status'] = FALSE;
+		$sl->response['message'] = "check_user_code;error;". t('Unable to find this code.');
+		return;
+	}
+	else {
+		db_query('DELETE FROM {metaverse_user_validators} WHERE code=:code', array(':code' => $args['code']));
+		$account = user_load($uid);
+		$account->field_mu_user_uuid[LANGUAGE_NONE][0]['value'] = $args['uuid'];
+		user_save($account);
+		$sl->response['status'] = TRUE;
+		$sl->response['message'] = "check_user_code;success;". t('User linked.');
+	}
+}
