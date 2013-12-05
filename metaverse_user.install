@@ -21,7 +21,7 @@ function metaverse_user_install() {
   if (!field_info_field($field_name)) {
     $field = array(
       'field_name' => $field_name,
-      'type' => 'text',
+      'type' => 'uuid_field',
       'entity_types' => array('user'),
       'cardinality' => 1,
       'locked' => TRUE,
