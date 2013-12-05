@@ -101,6 +101,15 @@ default {
             reset();
         }
     }
+
+    changed(integer change) {
+        if (change & CHANGED_REGION_START) {
+          reset();
+        }
+        else if (change & 256) {
+          reset();
+        }
+    }
 }
 
 // ************
@@ -133,6 +142,15 @@ state run {
     listen(integer channel, string name, key id, string message) {
         if (id == owner && message == "reset") {
             reset();
+        }
+    }
+
+    changed(integer change) {
+        if (change & CHANGED_REGION_START) {
+          reset();
+        }
+        else if (change & 256) {
+          reset();
         }
     }
 }
@@ -181,6 +199,15 @@ state check_user {
         llWhisper(0, _TIME_ELAPSED);
         state run;
     }
+
+    changed(integer change) {
+        if (change & CHANGED_REGION_START) {
+          reset();
+        }
+        else if (change & 256) {
+          reset();
+        }
+    }
 }
 // **************
 //      Error
@@ -204,6 +231,15 @@ state idle {
     listen(integer channel, string name, key id, string message) {
         if (id == owner && message == "reset") {
             reset();
+        }
+    }
+
+    changed(integer change) {
+        if (change & CHANGED_REGION_START) {
+          reset();
+        }
+        else if (change & 256) {
+          reset();
         }
     }
 }
