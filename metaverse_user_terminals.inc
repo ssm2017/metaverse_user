@@ -10,49 +10,11 @@
  * other free or open source software licenses.
  */
 
-function metaverse_user_manage_terminal($values) {
-	// check if the terminal exists
-	$terminals = metaverse_user_get_terminals_by_key(array('terminal_key' => $values->objectkey));
-
-	if (is_null($terminals)) {
-		drupal_set_message(t('no terminals found by id'));
-		// check if there is already a terminal on this region
-		$terminals = metaverse_user_get_terminals_by_region(array('owner_key' => $values->ownerkey, 'region_name' => $values->region_name));
-		if (!is_null($terminals)) {
-			drupal_set_message(t('!qty terminals found by region', array('!qty' => count($terminals))));
-			// delete terminals
-			metaverse_user_delete_terminals($terminals);
-			$terminals = NULL;
-			drupal_set_message(t('terminals deleted'));
-		}
-	}
-	else {
-		if (count($terminals) > 1) {
-			// delete terminals
-			metaverse_user_delete_terminals($terminals);
-			$terminals = NULL;
-			drupal_set_message(t('terminals deleted'));
-		}
-		else {
-			// update terminal
-			$values->nid = $terminals[0];
-			$terminal = metaverse_user_save_terminal($values, FALSE);
-			drupal_set_message(t('terminal updated'));
-		}
-	}
-	if (is_null($terminals)) {
-		// create a new terminal
-		$terminal = metaverse_user_save_terminal($values);
-		drupal_set_message(t('terminal created'));
-	}
-	return $terminal;
-}
-
 function metaverse_user_get_terminals_by_key($values) {
 	$query = new EntityFieldQuery();
 	$entities = $query->entityCondition('entity_type', 'node')
 			->propertyCondition('type', 'metaverse_user_terminal')
-			->fieldCondition('field_mu_terminal_key', 'value', $values['terminal_key'])
+			->fieldCondition('field_mu_terminal_key', 'uuid_field', $values['terminal_key'])
 			->execute();
 	if (isset($entities['node'])) {
 		$nodes_ids = array();
@@ -69,7 +31,7 @@ function metaverse_user_get_terminals_by_region($values) {
 	$query = new EntityFieldQuery();
 	$entities = $query->entityCondition('entity_type', 'node')
 			->propertyCondition('type', 'metaverse_user_terminal')
-			->fieldCondition('field_mu_terminal_owner_key', 'value', $values['owner_key'])
+			->fieldCondition('field_mu_terminal_owner_key', 'uuid_field', $values['owner_key'])
 			->fieldCondition('field_mu_region_name', 'value', $values['region_name'])
 			->execute();
 	if (isset($entities['node'])) {
@@ -115,6 +77,9 @@ function metaverse_user_save_terminal($values, $args = array(), $is_new = TRUE) 
 	$node->field_mu_terminal_owner_key[$node->language][0]['uuid_field'] = $values->ownerkey;
 	$node->field_mu_region_name[$node->language][0]['value'] = $values->region_name;
 	$node->field_mu_terminal_location[$node->language][0]['value'] = '<'.floor($values->position_x).','.floor($values->position_y).','.floor($values->position_z).'>';
+	if (isset($values->last_online)) {
+		$node->field_mu_terminal_last_online[$node->language][0]['value'] = $values->last_online;
+	}
 
 	node_save($node);
 	return $node;
@@ -177,12 +142,14 @@ function metaverse_user_inworld_save_terminal (&$sl, $args) {
 		else {
 			// update terminal
 			$sl->nid = $terminals[0];
+			$sl->last_online = time();
 			$terminal = metaverse_user_save_terminal($sl, $args, FALSE);
 			drupal_set_message(t('terminal updated'));
 		}
 	}
 	if (is_null($terminals)) {
 		// create a new terminal
+		$sl->last_online = time();
 		$terminal = metaverse_user_save_terminal($sl, $args);
 		drupal_set_message(t('terminal created'));
 	}
@@ -194,4 +161,37 @@ function metaverse_user_inworld_save_terminal (&$sl, $args) {
 		$sl->response['status'] = FALSE;
 		$sl->response['message'] = "error;". metaverse_framework_get_messages();
 	}
+}
+
+function metaverse_user_ping_terminal($terminal_nid) {
+	// get the terminal
+	$terminal = node_load($terminal_nid);
+
+	// get the url
+	$url = $terminal->field_mu_terminal_url[$terminal->language][0]['value'];
+
+	// check if terminal is answering
+	$response = metaverse_framework_http_request($url . 'ping');
+	if ($response->success && $response->code == 200) {
+		if ($response->data == 'pong') {
+			// save the last online value
+			$terminal->last_online = time();
+			node_save($terminal);
+			drupal_set_message(t('The terminal is answering.'));
+			$terminal->online_status = 'online';
+		}
+		else if ($response->data == 'idle') {
+			drupal_set_message(t('Terminal is online but it is stopped (needs a reset)'), 'warning');
+			$terminal->online_status = 'idle';
+		}
+		else {
+			drupal_set_message(t('Terminal is online but there is an error : !error', array('!error' => $response->data)), 'error');
+			$terminal->online_status = 'error';
+		}
+	}
+	else {
+		drupal_set_message(t('The terminal is not answering : !error', array('!error' => $response->data . ' (' . $response->code . ')')), 'error');
+		$terminal->online_status = 'offline';
+	}
+	return $terminal;
 }

@@ -2,5 +2,7 @@ name = Metaverse user
 description = "Link a Drupal user uid with a SecondLife / OpenSimulator uuid"
 package = Metaverse
 dependencies[] = metaverse_framework
+dependencies[] = date
 dependencies[] = uuid_field
+dependencies[] = views
 core = 7.x

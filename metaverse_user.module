@@ -49,24 +49,21 @@ function metaverse_user_settings() {
 }
 
 /**
+ * Implements hook_views_api.
+ */
+function metaverse_user_views_api() {
+  return array(
+    'api' => 3
+  );
+}
+
+/**
  * Implements hook_node_view.
  */
 function metaverse_user_node_view($node, $build_mode = 'full') {
 	if ($node->type == 'metaverse_user_terminal' && $build_mode == 'full') {
-		$url = $node->field_mu_terminal_url[$node->language][0]['value'];
-		// ping terminal
-		$response = metaverse_framework_http_request($url . 'ping');
-		if ($response->success && $response->code == 200) {
-			$status = 'status';
-			$message = t('Terminal is online');
-		}
-		else {
-			$status = 'error';
-			$message = t('The terminal is not answering : !error', array('!error' => $response->data . ' (' . $response->code . ')'));
-		}
-		$node->content['metaverse_user_status'] = array(
-			'#markup' => '<div class="messages ' . $status . '">' . $message . '</div>'
-		);
+		module_load_include('inc', 'metaverse_user', 'metaverse_user_terminals');
+		$terminal = metaverse_user_ping_terminal($node->nid);
 	}
 }
 
