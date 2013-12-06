@@ -89,15 +89,12 @@ function _metaverse_user_installed_fields() {
 		// terminal_key
 		'mu_terminal_key' => array(
 			'field_name' => 'field_mu_terminal_key',
-			'type' => 'text',
-			'module' => 'text',
+			'type' => 'uuid_field',
+			'module' => 'uuid_field',
 			'active' => 1,
 			'locked' => 1,
 			'cardinality' => 1,
 			'deleted' => 0,
-			'settings' => array(
-				'max_length' => 40
-			)
 		),
 		// terminal_url
 		'mu_terminal_url' => array(
@@ -115,15 +112,12 @@ function _metaverse_user_installed_fields() {
 		// owner_key
 		'mu_terminal_owner_key' => array(
 			'field_name' => 'field_mu_terminal_owner_key',
-			'type' => 'text',
-			'module' => 'text',
+			'type' => 'uuid_field',
+			'module' => 'uuid_field',
 			'active' => 1,
 			'locked' => 1,
 			'cardinality' => 1,
 			'deleted' => 0,
-			'settings' => array(
-				'max_length' => 40
-			)
 		),
 		// region_name
 		'mu_region_name' => array(
@@ -160,14 +154,7 @@ function _metaverse_user_installed_instances() {
 		'mu_terminal_key' => array(
 			'field_name' => 'field_mu_terminal_key',
 			'label' => t('Terminal key'),
-			'required' => TRUE,
-			'widget' => array(
-				'type' => 'text_textfield',
-				'module' => 'text',
-				'settings' => array(
-					'size' => 40
-				)
-			)
+			'required' => TRUE
 		),
 		// terminal url
 		'mu_terminal_url' => array(
@@ -191,14 +178,7 @@ function _metaverse_user_installed_instances() {
 		'mu_terminal_owner_key' => array(
 			'field_name' => 'field_mu_terminal_owner_key',
 			'label' => t('Owner key'),
-			'required' => TRUE,
-			'widget' => array(
-				'type' => 'text_textfield',
-				'module' => 'text',
-				'settings' => array(
-					'size' => 40
-				)
-			)
+			'required' => TRUE
 		),
 		// region name
 		'mu_region_name' => array(

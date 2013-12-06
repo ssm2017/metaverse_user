@@ -108,11 +108,11 @@ function metaverse_user_save_terminal($values, $args = array(), $is_new = TRUE) 
 	$node->body[$node->language][0]['summary'] = text_summary('');
 	$node->body[$node->language][0]['format'] = 'plain_text';
 
-	$node->field_mu_terminal_key[$node->language][0]['value'] = $values->objectkey;
+	$node->field_mu_terminal_key[$node->language][0]['uuid_field'] = $values->objectkey;
 	if (isset($args['terminal_url'])) {
 		$node->field_mu_terminal_url[$node->language][0]['value'] = base64_decode($args['terminal_url']);
 	}
-	$node->field_mu_terminal_owner_key[$node->language][0]['value'] = $values->ownerkey;
+	$node->field_mu_terminal_owner_key[$node->language][0]['uuid_field'] = $values->ownerkey;
 	$node->field_mu_region_name[$node->language][0]['value'] = $values->region_name;
 	$node->field_mu_terminal_location[$node->language][0]['value'] = '<'.floor($values->position_x).','.floor($values->position_y).','.floor($values->position_z).'>';
 
