@@ -202,7 +202,7 @@ function _metaverse_user_installed_instances() {
 		// owner key
 		'mu_terminal_owner_key' => array(
 			'field_name' => 'field_mu_terminal_owner_key',
-			'label' => t('Owner key'),
+			'label' => t('Owner'),
 			'required' => TRUE
 		),
 		// region name
