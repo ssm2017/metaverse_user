@@ -243,6 +243,13 @@ function metaverse_user_terminals_by_user_views() {
 			'empty_column' => 1,
 		),
 	);
+	/* No results behavior: Global: Text area */
+	$handler->display->display_options['empty']['area']['id'] = 'area';
+	$handler->display->display_options['empty']['area']['table'] = 'views';
+	$handler->display->display_options['empty']['area']['field'] = 'area';
+	$handler->display->display_options['empty']['area']['empty'] = TRUE;
+	$handler->display->display_options['empty']['area']['content'] = 'No terminal found';
+	$handler->display->display_options['empty']['area']['format'] = 'plain_text';
 	/* Field: Content: Region name */
 	$handler->display->display_options['fields']['field_mu_region_name']['id'] = 'field_mu_region_name';
 	$handler->display->display_options['fields']['field_mu_region_name']['table'] = 'field_data_field_mu_region_name';
