@@ -49,7 +49,7 @@ function metaverse_user_settings() {
 	$form['metaverse_user_password_fieldset']['metaverse_user_password'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Password.'),
-		'#default_value' => variable_get('metaverse_user_password', '0000'),
+		'#default_value' => variable_get('metaverse_user_password', '1234'),
 		'#description' => t("Enter the password to communicate with the terminals."),
 	);
 	// roles
@@ -151,7 +151,7 @@ function metaverse_user_inworld_check_user_code(&$sl, $args) {
 		$account->field_mu_user_uuid[LANGUAGE_NONE][0]['uuid_field'] = $args['uuid'];
 		user_save($account);
 		// assign the role to the user
-		metaverse_user_set_role($terminal->uid, 'link');
+		metaverse_user_set_role($uid, 'link');
 		// send the answer
 		$sl->response['status'] = TRUE;
 		$sl->response['message'] = "check_user_code;success;". t('User linked.');
@@ -175,7 +175,7 @@ function metaverse_user_set_role($uid, $role) {
 		case 'terminal':
 			$rid = variable_get('metaverse_user_terminal_role', 0);
 			break;
-		case 'linked':
+		case 'link':
 			$rid = variable_get('metaverse_user_linked_role', 0);
 			break;
 		default:
