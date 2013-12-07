@@ -17,12 +17,7 @@ function metaverse_user_get_terminals_by_key($values) {
 			->fieldCondition('field_mu_terminal_key', 'uuid_field', $values['terminal_key'])
 			->execute();
 	if (isset($entities['node'])) {
-		$nodes_ids = array();
-		foreach ($entities['node'] as $n) {
-			$nodes_ids[] = $n->nid;
-		}
-		// get the nodes
-		return $nodes_ids;
+		return array_keys($entities['node']);
 	}
 	return NULL;
 }
@@ -35,11 +30,7 @@ function metaverse_user_get_terminals_by_region($values) {
 			->fieldCondition('field_mu_region_name', 'value', $values['region_name'])
 			->execute();
 	if (isset($entities['node'])) {
-		$nodes_ids = array();
-		foreach ($entities['node'] as $n) {
-			$nodes_ids[] = $n->nid;
-		}
-		return $nodes_ids;
+		return array_keys($entities['node']);
 	}
 	return NULL;
 }
